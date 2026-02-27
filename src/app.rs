@@ -5,6 +5,7 @@ use std::{
 };
 
 use iced::{
+    Alignment::Center,
     Background, Color, Element,
     Length::{self, Fill},
     Padding, Theme,
@@ -15,7 +16,7 @@ use iced::{
     },
 };
 use iced_core::text::LineHeight;
-use iced_widget::{container::Style, toggler};
+use iced_widget::{button, container::Style, space, toggler};
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone)]
@@ -24,6 +25,7 @@ pub enum Message {
     IncludingEditAction(Action),
     ExcludingEditAction(Action),
     ToggleCommonWords,
+    Reset,
 }
 
 pub struct App {
@@ -199,12 +201,23 @@ impl App {
             .text_line_height(LineHeight::Absolute(iced::Pixels(50.0)))
             .width(Fill);
 
+        let reset_button = button(text("RESET").width(Fill).center())
+            .on_press(Message::Reset)
+            .width(Fill);
+
         let view: Element<'_, Message> = container(
             row![
-                column![position, including, excluding, common_word_toggle]
-                    .spacing(10)
-                    .width(Length::Fixed(250.0))
-                    .padding(10),
+                column![
+                    position,
+                    including,
+                    excluding,
+                    common_word_toggle,
+                    space().height(Fill),
+                    reset_button
+                ]
+                .spacing(10)
+                .width(Length::Fixed(250.0))
+                .padding(10),
                 words_scrollable
             ]
             .spacing(10),
@@ -274,6 +287,13 @@ impl App {
                 _ => self.excluding_content.perform(action),
             },
             Message::ToggleCommonWords => self.only_show_common = !self.only_show_common,
+            Message::Reset => {
+                self.position_content
+                    .iter_mut()
+                    .for_each(|content| *content = Content::new());
+                self.excluding_content = Content::new();
+                self.including_content = Content::new();
+            }
         }
 
         self.update_filtered_words();
